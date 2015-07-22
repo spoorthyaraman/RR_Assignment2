@@ -1,0 +1,156 @@
+---
+title: "Analysis of the Storm Dataset to study the damages caused in the United States for various events"
+output: html_document
+---
+
+#
+
+#Synopsis
+This analysis is based on the dataset provided by the National Weather Service which contains information about various storm related events, location, time of the event, location and damages caused in terms of life, property and crops. The aim of this study is to answer two important questions based on the data, in the context of the United States
+
+- Which types of events are most harmful with respect to population health?
+
+- Which types of events have the greatest economic consequences?
+
+For the purpose of this analysis, injuries and fatalities are considered as affecting population health and crop and property damage estimates are considered as contributing to economic consequences.
+The results of this study has found that Tornados are the most damage causing events resulting in maximum number of deaths and injuries and also affecting maximum crops and properties.
+
+#Data Processing
+The data set required for this analysis is downloaded from the internet and stored in the file called "StormData.csv.bz2"
+
+```{r cache=TRUE}
+download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2", "StormData.csv.bz2", method="curl")
+```
+
+The file is then read into a dataframe called "data"
+
+```{r cache=TRUE}
+data <- read.csv(bzfile("StormData.csv.bz2"),header=TRUE)
+```
+
+#Results
+
+Per the analysis done, following are the important observations
+
+- Tornado is the most harmful event that causes highest number of fatalities (5633), injuries (91346) and economic damages ($ 3,312,277)
+- Tornados are thankfully not the most common event, but the damage is significant for each occurance
+- In the study of damage to crop, Hail contributes more to crop damage than tornados.
+- Events that are most damaging, to both human population and economy are almost the same 
+
+#Data Analysis
+Examining the data using the str() function gives a fair idea of the contents of the dataset
+
+```{r cache=TRUE}
+str(data)
+```
+
+Loading all the required libraries(packages) for the analysis
+```{r cache=TRUE}
+library(plyr)
+library(ggplot2)
+library(grid)
+library(scales)
+```
+
+###Analysis of the most harmful events with respect to population health 
+Population health is affected by fatalities (number of deaths) and injuries to people. These data are available in the dataset as values in the columns FATALITIES and INJURIES, for each reported event.
+
+There could be two appraches to calculate which of the events are the most harmful resulting in higher fatalities and injuries.
+
+- Taking the sum of total deaths and injuries for each event type
+- Taking the average of total deaths and injuries for each event type.
+Both the analysis are present here.
+
+Analyis by the sum of fatalities by different type of events. Since the data set contains around 900+ types of events, only top 10 events that contribute to most fatalities are plotted
+
+```{r cache=TRUE}
+fatal <- aggregate(data$FATALITIES, list(data$EVTYPE), sum)
+fatal_high = arrange(fatal,desc(x))
+fatal_high <- fatal_high[1:10,]
+fatal_high$ord <- reorder(fatal_high$Group.1,-fatal_high$x)
+```
+
+Plotting the bargraph of the top 10 events that result in most fatalities
+
+```{r cache=TRUE}
+plot_sum <- ggplot(fatal_high, aes(x = Group.1,y=x)) + geom_bar(aes(x=ord),data=fatal_high,stat = "identity")+labs(title = "Sum of Fatalities due to top 10 destructing event types", y = "Sum of Fatalities", x = "Event Types")+coord_flip()
+print (plot_sum)
+```
+
+Analyis by the mean of fatalities by different type of events. Since the data set contains around 900+ types of events, only top 10 events that contribute to most fatalities are plotted
+
+```{r cache=TRUE}
+fatal_mean <- aggregate(data$FATALITIES, list(data$EVTYPE), mean)
+fatal_mean = arrange(fatal_mean,desc(x))
+fatal_mean_high <- fatal_mean[1:10,]
+names(fatal_mean_high) <- c("Event Types", "Mean of fatalities")
+```
+
+Examining this data to see which are the top 10 event types, considering the mean
+
+```{r cache=TRUE}
+fatal_mean_high
+```
+
+Analyis by the sum of injuries by different type of events. Since the data set contains around 900+ types of events, only top 10 events that contribute to most injuries are plotted
+
+```{r cache=TRUE}
+injure <- aggregate(data$INJURIES, list(data$EVTYPE), sum)
+injure_high = arrange(injure,desc(x))
+injure_high <- injure_high[1:10,]
+injure_high$ord <- reorder(injure_high$Group.1,-injure_high$x)
+```
+
+Plotting the bargraph of the top 10 events that result in most injuries
+
+```{r cache=TRUE}
+plot_inj <- ggplot(injure_high, aes(x = Group.1,y=x)) + geom_bar(aes(x=ord),data=injure_high,stat = "identity")+ggtitle("Sum of Injuries due to top 10 destructing event types")+xlab("Event Types")+ylab("Sum of Injuries")+coord_flip()
+print(plot_inj)
+```
+
+Analyis by the mean of injuries by different type of events. Since the data set contains around 900+ types of events, only top 10 events that contribute to most injuries are plotted
+
+```{r cache=TRUE}
+injure_mean <- aggregate(data$INJURIES, list(data$EVTYPE), mean)
+injure_mean = arrange(injure_mean,desc(x))
+injure_mean_high <- injure_mean[1:10,]
+names(injure_mean_high) <- c("Event Types", "Mean of injuries")
+```
+
+Examining this data to see which are the top 10 event types, considering the mean
+
+```{r cache=TRUE}
+injure_mean_high
+```
+
+###Analysis of the most harmful events with greatest economic consequences
+
+Destruction to crops and damages to properties contribute to severe economic loss and an analysis on the same shows which event type is the most destructive one to the economy.
+
+Analyis of the total crop damages due to events is presented below. Since the data set contains around 900+ types of events, only top 10 events that contribute to most crop damages (in terms of dollars) are plotted
+
+```{r cache=TRUE}
+crop_dam <- aggregate(data$CROPDMG, list(data$EVTYPE), sum)
+crop_dam_high = arrange(crop_dam,desc(x))
+crop_dam_high <- crop_dam_high[1:10,]
+crop_dam_high$ord <- reorder(crop_dam_high$Group.1,-crop_dam_high$x)
+```
+
+Analyis of the total property damages due to events is presented below. Since the data set contains around 900+ types of events, only top 10 events that contribute to most property damages (in terms of dollars) are plotted
+
+```{r cache=TRUE}
+prop_dam <- aggregate(data$PROPDMG, list(data$EVTYPE), sum)
+prop_dam_high = arrange(prop_dam,desc(x))
+prop_dam_high <- prop_dam_high[1:10,]
+prop_dam_high$ord <- reorder(prop_dam_high$Group.1,-prop_dam_high$x)
+```
+
+The plot below shows a stacked barplot of the crop and property damages caused due to various event types.
+
+```{r cache=TRUE}
+crop_dam_high$type <- "Crop"
+prop_dam_high$type <- "Property"
+total_econ_dam <- rbind(crop_dam_high,prop_dam_high)
+total_econ_dam$ord <- reorder(total_econ_dam$Group.1,-total_econ_dam$x)
+ggplot(data = total_econ_dam, aes(x = Group.1, y = x, fill = type)) + geom_bar(aes(x=ord),data=total_econ_dam,stat="identity")+coord_flip()+labs(title = "Damages to Crop and Property by the top 10 event types", y = "Sum of damages", x = "Event Types", fill = "Type of Damage")+scale_y_continuous(labels = dollar)
+```
